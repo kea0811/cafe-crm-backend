@@ -1,4 +1,5 @@
 const Cafe = require('../models/Cafe');
+const Employee = require('../models/Employee');
 
 exports.createCafe = async (req, res) => {
   try {
@@ -7,6 +8,27 @@ exports.createCafe = async (req, res) => {
     res.status(201).send(cafe);
   } catch (error) {
     res.status(400).send(error);
+  }
+};
+
+exports.getCafeById = async (req, res) => {
+  try {
+      const cafe = await Cafe.findById(req.params.id);
+      if (!cafe) {
+          return res.status(404).send({ message: 'Cafe not found' });
+      }
+      res.send(cafe);
+  } catch (error) {
+      res.status(500).send({ message: 'Error retrieving cafe', error: error.message });
+  }
+};
+
+exports.listLocations = async (req, res) => {
+  try {
+      const locations = await Cafe.distinct("location");
+      res.send(locations);
+  } catch (error) {
+      res.status(500).send({ message: 'Error retrieving locations', error: error.message });
   }
 };
 
@@ -35,15 +57,15 @@ exports.listCafes = async (req, res) => {
       },
       {
         $project: {
-          name: 1,  // Include cafe name
-          description: 1,  // Include cafe description
-          logo: 1,  // Include cafe logo if necessary
-          location: 1,  // Include cafe location
-          id: 1,  // Include cafe id
-          employeesCount: 1  // Include the counted employees
+          name: 1,  
+          description: 1, 
+          logo: 1,  
+          location: 1,  
+          id: 1, 
+          employeesCount: 1  
         }
       },
-      { $sort: { employeesCount: -1 } }  // Sort cafes by the count of employees, descending
+      { $sort: { employeesCount: -1 } }  
     ]);
 
     res.status(200).json(cafes);
@@ -68,12 +90,13 @@ exports.updateCafe = async (req, res) => {
 exports.deleteCafe = async (req, res) => {
   const { id } = req.params;
   try {
-    const cafe = await Cafe.findById(id);
-    if (!cafe) {
+    await Employee.deleteMany({ cafe: id });
+
+    const result = await Cafe.findByIdAndDelete(id);
+    if (!result) {
       return res.status(404).json({ message: 'Café not found' });
     }
-    await Employee.deleteMany({ cafe: cafe._id });
-    await cafe.remove();
+
     res.status(200).json({ message: 'Café and associated employees deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });

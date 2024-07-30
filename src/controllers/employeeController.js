@@ -11,6 +11,18 @@ exports.createEmployee = async (req, res) => {
   }
 };
 
+exports.getEmployeeById = async (req, res) => {
+  try {
+      const employee = await Employee.findById(req.params.id);
+      if (!employee) {
+          return res.status(404).send({ message: 'Employee not found' });
+      }
+      res.send(employee);
+  } catch (error) {
+      res.status(500).send({ message: 'Error retrieving employee' });
+  }
+};
+
 exports.listEmployees = async (req, res) => {
   const { cafe } = req.query;
   try {
@@ -38,7 +50,7 @@ exports.listEmployees = async (req, res) => {
   }
 };
 
-exports.updateEmployee = async (req, res) => {
+exports.updateEmployeeById = async (req, res) => {
   const { id } = req.params;
   try {
     const updatedEmployee = await Employee.findByIdAndUpdate(id, req.body, { new: true });
@@ -51,14 +63,13 @@ exports.updateEmployee = async (req, res) => {
   }
 };
 
-exports.removeEmployee = async (req, res) => {
+exports.deleteEmployeeById = async (req, res) => {
   const { id } = req.params;
   try {
-    const employee = await Employee.findById(id);
-    if (!employee) {
+    const result = await Employee.findByIdAndDelete(id);
+    if (!result) {
       return res.status(404).json({ message: 'Employee not found' });
     }
-    await employee.remove();
     res.status(200).json({ message: 'Employee deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
